@@ -15,7 +15,7 @@ Given below are my contributions to the project.
 * **New Feature**: Added undo (`undo`).
     * What it does: takes back the last reveal, flag or unflag, one move at a time. The timer keeps running. An empty history prints `Nothing to undo.`
     * Justification: a mistyped coordinate or a wrong flag is otherwise permanent in a command-line game. Undo lets the player recover without starting again.
-    * Highlights: `GameSession` keeps a `Stack<Board>`. Reveal, flag and unflag push `Board.deepCopy()` before they change the board. Undo pops that copy and writes it back with `copyStateFrom`, so the session keeps the same `Board` object. `new custom` and a profile switch clear the stack, so undo cannot jump into another game. `UndoCommandTest` covers an empty stack, several flags undone one at a time, a reveal, an unflag, and extra arguments.
+    * Highlights: `GameSession` keeps a `Stack<Board>`. Reveal, flag and unflag push `Board.deepCopy()` before they change the board. Undo pops that copy and writes it back with `Board.restoreFrom`, so the session keeps the same `Board` object. The undo history is cleared by a profile switch, any new game (preset or custom), and a win or loss, so undo cannot jump into another game. `UndoCommandTest` covers an empty stack, several flags undone one at a time, a reveal, an unflag, and extra arguments.
     * Credits: none.
 
 * **Code contributed**: [RepoSense contribution view](https://nus-cs2113-ay2627-s1.github.io/tp-dashboard/?search=ProNoob116). Functional code is tagged `// @@author ProNoob116` and includes `CustomGameCommand`, `UndoCommand`, `Board.deepCopy`, the board history on `GameSession`, and the earlier `Difficulty`, `NewGameCommand` and `HintCommand` work.
@@ -23,7 +23,7 @@ Given below are my contributions to the project.
 * **Enhancements to existing features**:
     * Replaced the fixed 9×9 board with `rows`, `cols` and `totalMines`, so placement, flood fill, victory checking and printing follow the current size. `Board.SIZE` and `Board.MINES` remain only for older tests.
     * Added the `Difficulty` presets: easy is 9×9 with 10 mines, medium is 16×16 with 40, and hard is 16×30 with 99. `new` with no word starts an easy game.
-    * Added `hint`, which prints one hidden cell that the revealed numbers and flags prove safe, without revealing or flagging it.
+    * Added `hint`, which prints one hidden cell that the revealed numbers prove safe. It ignores flags entirely, and it does not reveal or flag the cell.
 
 * **Documentation**:
     * User Guide: `new easy`, `new medium`, `new hard`, `new custom`, `hint`, `undo`, and the FAQ entry on undoing after a mine. Added the matching command-summary rows.
@@ -143,7 +143,7 @@ Given below are sections I contributed to the Developer Guide. They showcase my 
 
 `new [easy|medium|hard]` starts a preset game and `new custom ROWS COLS MINES` starts a custom one. `EASY` is 9×9 with 10 mines, `MEDIUM` is 16×16 with 40, and `HARD` is 16×30 with 99.
 
-![Board class diagram](../images/BoardClassDiagram.png)
+[Board class diagram](../DeveloperGuide.md#creating-a-board)
 
 `Board` stores its own `rows`, `cols` and `totalMines`, so all board logic works for any size. `CustomGameCommand.validate` accepts dimensions from 5 to 50 and a mine count from 1 to cells − 9.
 
@@ -155,11 +155,9 @@ Step 2. `execute` builds `Board(16, 30, 99)`, which places 99 mines at random an
 
 Step 3. `copyStateFrom` copies the size, cells, state and first-move flag into the board the session already holds. The timer restarts and the new board is printed.
 
-![Board sequence diagram](../images/BoardSequenceDiagram.png)
+[Board sequence diagram](../DeveloperGuide.md#creating-a-board)
 
-The object diagram below shows the objects just after `copyStateFrom`. `copied` and `original` are different `Cell` objects with the same values.
-
-![Board object diagram](../images/BoardObjectDiagram.png)
+The [board object diagram](../DeveloperGuide.md#creating-a-board) shows the objects just after `copyStateFrom`. `copied` and `original` are different `Cell` objects with the same values.
 
 > **Note:** `new custom R C M` follows the same steps through `CustomGameCommand` and also clears the undo history. The first reveal of either board is protected by safeclick.
 
@@ -178,7 +176,7 @@ The object diagram below shows the objects just after `copyStateFrom`. `copied` 
 
 `undo` restores the board as it was before the last reveal, flag or unflag.
 
-![Undo class diagram](../images/UndoClassDiagram.png)
+[Undo class diagram](../DeveloperGuide.md#undoing-a-move)
 
 Given below is an example usage scenario and how the undo mechanism behaves at each step.
 
@@ -188,11 +186,9 @@ Step 2. The player flags a second cell. Another copy, now containing the first f
 
 Step 3. The player types `undo`. `undoLastMove` pops the top copy and copies it onto the live board with `Board.restoreFrom`.
 
-![Undo sequence diagram](../images/UndoSequenceDiagram.png)
+[Undo sequence diagram](../DeveloperGuide.md#undoing-a-move)
 
-The object diagram below shows the objects after Step 3. The second flag is gone, and the stack still holds the board from before the first flag. The timer keeps running.
-
-![Undo object diagram](../images/UndoObjectDiagram.png)
+The [undo object diagram](../DeveloperGuide.md#undoing-a-move) shows the objects after Step 3. The second flag is gone, and the stack still holds the board from before the first flag. The timer keeps running.
 
 > **Note:** If the history is empty, `undo` prints `Nothing to undo.` `new custom`, preset `new` commands, and switching profiles now clear the undo history.
 
